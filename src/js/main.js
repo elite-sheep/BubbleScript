@@ -11,8 +11,6 @@ import GL from "./lightgl.js"
 import Renderer from "./renderer.js"
 import Water from "./water.js"
 
-import { tiles } from "./resources.js"
-
 function text2html(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 }
