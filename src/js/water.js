@@ -3,17 +3,18 @@
  * http://madebyevan.com/webgl-water/
  *
  * Copyright 2011 Evan Wallace
+ * Copyright 2019 Yuchen Wang
  * Released under the MIT license
  */
 
 import GL from "./lightgl.js"
 import { gl } from "./main.js"
 
+import dropFragmentShader from "../shaders/dropfragmentshader.glsl"
+import normalFragmentShader from "../shaders/normalfragmentshader.glsl"
+import moveSphereFragmentShader from "../shaders/movespherefragmentshader.glsl"
+import updateFragmentShader from "../shaders/updatefragmentshader.glsl"
 import vertexShader from "../shaders/basevertexshader.glsl"
-import dropVertexShader from "../shaders/dropvertexshader.glsl"
-import normalVertexShader from "../shaders/normalvertexshader.glsl"
-import sphereVertexShader from "../shaders/sphereVertexShader.glsl"
-import updateVertexShader from "../shaders/updatevertexshader.glsl"
 
 // The data in the texture is (position.y, velocity.y, normal.x, normal.z)
 function Water() {
@@ -29,10 +30,10 @@ function Water() {
     this.textureA = new GL.Texture(256, 256, { type: gl.HALF_FLOAT_OES, filter: filter });
     this.textureB = new GL.Texture(256, 256, { type: gl.HALF_FLOAT_OES, filter: filter });
   }
-  this.dropShader = new GL.Shader(vertexShader, dropVertexShader);
-  this.updateShader = new GL.Shader(vertexShader, updateVertexShader);
-  this.normalShader = new GL.Shader(vertexShader, normalVertexShader);
-  this.sphereShader = new GL.Shader(vertexShader, sphereVertexShader);
+  this.dropShader = new GL.Shader(vertexShader, dropFragmentShader);
+  this.updateShader = new GL.Shader(vertexShader, updateFragmentShader);
+  this.normalShader = new GL.Shader(vertexShader, normalFragmentShader);
+  this.sphereShader = new GL.Shader(vertexShader, moveSphereFragmentShader);
 }
 
 Water.prototype.addDrop = function(x, y, radius, strength) {
