@@ -6,6 +6,9 @@
  * Released under the MIT license
  */
 
+import GL from "./lightgl.js"
+import { gl } from "./main.js"
+
 // The data in the texture is (position.y, velocity.y, normal.x, normal.z)
 function Water() {
   var vertexShader = '\
@@ -170,3 +173,5 @@ Water.prototype.updateNormals = function() {
   });
   this.textureB.swapWith(this.textureA);
 };
+
+export default Water;

@@ -6,6 +6,10 @@
  * Released under the MIT license
  */
 
+import GL from "./lightgl.js"
+import { gl } from "./main.js"
+import { water } from "./main.js"
+
 var helperFunctions = '\
   const float IOR_AIR = 1.0;\
   const float IOR_WATER = 1.333;\
@@ -351,3 +355,5 @@ Renderer.prototype.renderCube = function() {
   }).draw(this.cubeMesh);
   gl.disable(gl.CULL_FACE);
 };
+
+export default Renderer;

@@ -4,7 +4,9 @@ var HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
   devtool: 'source-map',
-  entry: ['./src/js/main.js'],
+  entry: {
+    script: ['./src/js/main.js'],
+  },
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js'
@@ -12,13 +14,38 @@ module.exports = {
   plugins: [
     new webpack.optimize.OccurrenceOrderPlugin(),
     new HtmlWebpackPlugin({
-      template: './index.html'
+      template: 'src/index.html'
     })
   ],
   module: {
-    rules: [{
-      test: /\.css$/,
-      loaders: ['style', 'css']
-    }]
+    rules: [
+      {
+        test: /\.css$/,
+        loaders: ['style', 'css']
+      },
+      {
+        test: /\.jpg$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[ext]',
+              publicPath: './src/',
+              outputPath: './resources/'
+            }
+          },
+          'image-webpack-loader'
+        ]
+      },
+      {
+        test: /\.(html)$/,
+        use: {
+          loader: 'html-loader',
+          options: {
+            attrs: ['img:src', 'link:href']
+          }
+        }
+      }
+    ]
   }
 }

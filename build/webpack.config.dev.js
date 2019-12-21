@@ -16,14 +16,44 @@ module.exports = {
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new HtmlWebpackPlugin({
-      template: 'index.html'
+      template: 'src/index.html'
     })
   ],
   module: {
-    rules: [{
-      test: /\.css$/,
-      loaders: ['style', 'css']
-    }]
+    rules: [
+      {
+        test: /\.css$/,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          esModule: false,
+          outputPath: 'css/'
+        }
+      },
+      {
+        test: /\.jpg$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[ext]',
+              esModule: false,
+              outputPath: './resources/'
+            }
+          },
+          'image-webpack-loader'
+        ]
+      },
+      {
+        test: /\.(html)$/,
+        use: {
+          loader: 'html-loader',
+          options: {
+            attrs: ['img:src', 'link:href']
+          }
+        }
+      }
+    ]
   },
   devServer: {
     contentBase: './dist',

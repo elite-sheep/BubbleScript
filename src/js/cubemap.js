@@ -6,6 +6,9 @@
  * Released under the MIT license
  */
 
+import GL from "./lightgl.js"
+import { gl } from "./main.js"
+
 function Cubemap(images) {
   this.id = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.id);
@@ -31,3 +34,5 @@ Cubemap.prototype.unbind = function(unit) {
     gl.activeTexture(gl.TEXTURE0 + (unit || 0));
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 };
+
+export default Cubemap;

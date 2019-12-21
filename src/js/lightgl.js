@@ -1135,8 +1135,8 @@ Mesh.prototype = {
 Mesh.plane = function(options) {
   options = options || {};
   var mesh = new Mesh(options);
-  detailX = options.detailX || options.detail || 1;
-  detailY = options.detailY || options.detail || 1;
+  var detailX = options.detailX || options.detail || 1;
+  var detailY = options.detailY || options.detail || 1;
 
   for (var y = 0; y <= detailY; y++) {
     var t = y / detailY;
@@ -1209,7 +1209,7 @@ Mesh.sphere = function(options) {
   options = options || {};
   var mesh = new Mesh(options);
   var indexer = new Indexer();
-  detail = options.detail || 6;
+  var detail = options.detail || 6;
 
   for (var octant = 0; octant < 8; octant++) {
     var scale = pickOctant(octant);
@@ -1451,6 +1451,7 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 //     }).draw(mesh);
 
 function regexMap(regex, text, callback) {
+  var result;
   while ((result = regex.exec(text)) != null) {
     callback(result);
   }
@@ -2066,3 +2067,5 @@ Vector.angleBetween = function(a, b) {
 
 return GL;
 })();
+
+export default GL;

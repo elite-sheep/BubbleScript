@@ -6,6 +6,13 @@
  * Released under the MIT license
  */
 
+import Cubemap from "./cubemap.js"
+import GL from "./lightgl.js"
+import Renderer from "./renderer.js"
+import Water from "./water.js"
+
+import { tiles } from "./resources.js"
+
 function text2html(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 }
@@ -24,8 +31,8 @@ function handleError(text) {
 
 window.onerror = handleError;
 
-var gl = GL.create();
-var water;
+export var gl = GL.create();
+export var water;
 var cubemap;
 var renderer;
 var angleX = -25;
