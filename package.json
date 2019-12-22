@@ -5,8 +5,8 @@
   "license": "MIT",
   "keywords": ["WebGL", "graphics"],
   "scripts": {
-    "build": "webpack --config ./build/webpack.config.prod.js",
-    "dev": "webpack-dev-server --config ./build/webpack.config.dev.js"
+    "build": "webpack --mode=production --config ./build/webpack.config.prod.js",
+    "dev": "webpack-dev-server --mode=development --config ./build/webpack.config.dev.js"
   },
   "dependencies": {
     "file-loader": "^5.0.0",
