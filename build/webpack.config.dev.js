@@ -52,6 +52,15 @@ module.exports = {
             attrs: ['img:src', 'link:href']
           }
         }
+      },
+      {
+        test: /\.(glsl)$/,
+        use: {
+          loader: 'raw-loader',
+          options: {
+            esModule: false
+          }
+        }
       }
     ]
   },

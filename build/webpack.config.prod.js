@@ -21,7 +21,12 @@ module.exports = {
     rules: [
       {
         test: /\.css$/,
-        loaders: ['style', 'css']
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          esModule: false,
+          outputPath: 'css/'
+        }
       },
       {
         test: /\.jpg$/,
@@ -30,7 +35,7 @@ module.exports = {
             loader: 'file-loader',
             options: {
               name: '[name].[ext]',
-              publicPath: './src/',
+              esModule: false,
               outputPath: './resources/'
             }
           },
@@ -43,6 +48,15 @@ module.exports = {
           loader: 'html-loader',
           options: {
             attrs: ['img:src', 'link:href']
+          }
+        }
+      },
+      {
+        test: /\.(glsl)$/,
+        use {
+          loader: 'raw-loader',
+          options: {
+            esModule: false
           }
         }
       }
