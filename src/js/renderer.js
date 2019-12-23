@@ -1,6 +1,5 @@
 /*
- * WebGL Water
- * http://madebyevan.com/webgl-water/
+ * BubbleScript
  *
  * Copyright 2011 Evan Wallace
  * Copyright 2019 Yuchen Wang
@@ -32,8 +31,6 @@ function Renderer() {
   for (var i = 0; i < 2; i++) {
     this.waterShaders[i] = new GL.Shader(waterVertexShader, waterFragmentShader);
   }
-  this.sphereCenter = new GL.Vector();
-  this.sphereRadius = 0;
   this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
   this.sphereShader = new GL.Shader(sphereVertexShader, sphereFragmentShader);
 
@@ -47,7 +44,7 @@ function Renderer() {
   this.causticsShader = new GL.Shader(causticsVertexShader, causticsFragmentShader);
 }
 
-Renderer.prototype.updateCaustics = function(water) {
+Renderer.prototype.updateCaustics = function(water, sphere) {
   if (!this.causticsShader) return;
   var hasDerivatives = !!gl.getExtension('OES_standard_derivatives');
   var this_ = this;
@@ -57,14 +54,14 @@ Renderer.prototype.updateCaustics = function(water) {
     this_.causticsShader.uniforms({
       light: this_.lightDir,
       water: 0,
-      sphereCenter: this_.sphereCenter,
-      sphereRadius: this_.sphereRadius,
+      sphereCenter: sphere.center,
+      sphereRadius: sphere.radius,
       hasDerivatives: hasDerivatives
     }).draw(this_.waterMesh);
   });
 };
 
-Renderer.prototype.renderWater = function(water, sky) {
+Renderer.prototype.renderWater = function(water, sky, sphere) {
   var tracer = new GL.Raytracer();
   water.textureA.bind(0);
   this.tileTexture.bind(1);
@@ -81,26 +78,26 @@ Renderer.prototype.renderWater = function(water, sky) {
       causticTex: 3,
       eye: tracer.eye,
       isUnderWater: i,
-      sphereCenter: this.sphereCenter,
-      sphereRadius: this.sphereRadius
+      sphereCenter: sphere.center,
+      sphereRadius: sphere.radius
     }).draw(this.waterMesh);
   }
   gl.disable(gl.CULL_FACE);
 };
 
-Renderer.prototype.renderSphere = function() {
+Renderer.prototype.renderSphere = function(sphere) {
   water.textureA.bind(0);
   this.causticTex.bind(1);
   this.sphereShader.uniforms({
     light: this.lightDir,
     water: 0,
     causticTex: 1,
-    sphereCenter: this.sphereCenter,
-    sphereRadius: this.sphereRadius
+    sphereCenter: sphere.center,
+    sphereRadius: sphere.radius
   }).draw(this.sphereMesh);
 };
 
-Renderer.prototype.renderCube = function() {
+Renderer.prototype.renderCube = function(sphere) {
   gl.enable(gl.CULL_FACE);
   water.textureA.bind(0);
   this.tileTexture.bind(1);
@@ -110,8 +107,8 @@ Renderer.prototype.renderCube = function() {
     water: 0,
     tiles: 1,
     causticTex: 2,
-    sphereCenter: this.sphereCenter,
-    sphereRadius: this.sphereRadius
+    sphereCenter: sphere.center,
+    sphereRadius: sphere.radius
   }).draw(this.cubeMesh);
   gl.disable(gl.CULL_FACE);
 };

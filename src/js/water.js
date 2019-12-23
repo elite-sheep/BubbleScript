@@ -1,6 +1,5 @@
 /*
- * WebGL Water
- * http://madebyevan.com/webgl-water/
+ * BubbleScript
  *
  * Copyright 2011 Evan Wallace
  * Copyright 2019 Yuchen Wang
@@ -49,14 +48,14 @@ Water.prototype.addDrop = function(x, y, radius, strength) {
   this.textureB.swapWith(this.textureA);
 };
 
-Water.prototype.moveSphere = function(oldCenter, newCenter, radius) {
+Water.prototype.moveSphere = function(sphere) {
   var this_ = this;
   this.textureB.drawTo(function() {
     this_.textureA.bind();
     this_.sphereShader.uniforms({
-      oldCenter: oldCenter,
-      newCenter: newCenter,
-      radius: radius
+      oldCenter: sphere.oldCenter,
+      newCenter: sphere.center,
+      radius: sphere.radius
     }).draw(this_.plane);
   });
   this.textureB.swapWith(this.textureA);
