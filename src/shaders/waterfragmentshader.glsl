@@ -29,8 +29,10 @@ float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadi
   float c = dot(toSphere, toSphere) - sphereRadius * sphereRadius;
   float discriminant = b*b - 4.0*a*c;
   if (discriminant > 0.0) {
-    float t = (-b - sqrt(discriminant)) / (2.0 * a);
-    if (t > 0.0) return t;
+    float t1 = (-b - sqrt(discriminant)) / (2.0 * a);
+    float t2 = (-b + sqrt(discriminant)) / (2.0 * a);
+    if (t1 > 0.0) return t1;
+    else if (t2 > 0.0) return t2;
   }
   return 1.0e6;
 }
