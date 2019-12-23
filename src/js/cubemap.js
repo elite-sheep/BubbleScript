@@ -1,8 +1,8 @@
 /*
- * WebGL Water
- * http://madebyevan.com/webgl-water/
+ * BubbleScript
  *
  * Copyright 2011 Evan Wallace
+ * Copyright 2019 Yuchen Wang
  * Released under the MIT license
  */
 
