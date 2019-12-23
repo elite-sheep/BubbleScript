@@ -83,7 +83,6 @@ window.onload = function() {
     new GL.Vector(-0.4, -0.75, 0.2),
     0.25,
     new GL.Vector(),
-    new GL.Vector(0, -9.8, 0)
   );
 
   for (var i = 0; i < 20; i++) {

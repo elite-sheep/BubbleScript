@@ -35,9 +35,9 @@ vec3 getSphereColor(vec3 point) {
 }
 
 void main() {
-  gl_FragColor = vec4(getSphereColor(position), 1.0);
+  gl_FragColor = vec4(getSphereColor(position), 0.5);
   vec4 info = texture2D(water, position.xz * 0.5 + 0.5);
   if (position.y < info.r) {
-    gl_FragColor.rgb *= underwaterColor * 1.2;
+    gl_FragColor.rgb *= underwaterColor;
   }
 }
