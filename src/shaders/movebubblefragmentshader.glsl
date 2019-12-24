@@ -23,7 +23,16 @@ void main() {
   info.r += volumeInSphere(oldCenter);
   
   /* subtract the new volume */
-  info.r -= volumeInSphere(newCenter);
+  float volume = volumeInSphere(newCenter);
+  info.r -= volume;
+
+  if (newCenter.y + radius > info.r
+      || newCenter.x - radius < -1.0
+      || newCenter.z - radius < -1.0
+      || 1.0 - newCenter.x < radius
+      || 1.0 - newCenter.z < radius) {
+    info.r += volume;
+  } 
 
   gl_FragColor = info;
 }

@@ -11,6 +11,7 @@ import { gl } from "./main.js"
 
 import dropFragmentShader from "../shaders/dropfragmentshader.glsl"
 import normalFragmentShader from "../shaders/normalfragmentshader.glsl"
+import moveBubbleFragmentShader from "../shaders/movebubblefragmentshader.glsl"
 import moveSphereFragmentShader from "../shaders/movespherefragmentshader.glsl"
 import updateFragmentShader from "../shaders/updatefragmentshader.glsl"
 import vertexShader from "../shaders/basevertexshader.glsl"
@@ -33,6 +34,7 @@ function Water() {
   this.updateShader = new GL.Shader(vertexShader, updateFragmentShader);
   this.normalShader = new GL.Shader(vertexShader, normalFragmentShader);
   this.sphereShader = new GL.Shader(vertexShader, moveSphereFragmentShader);
+  this.bubbleShader = new GL.Shader(vertexShader, moveBubbleFragmentShader);
 }
 
 Water.prototype.addDrop = function(x, y, radius, strength) {
@@ -55,10 +57,22 @@ Water.prototype.moveSingleBubble = function(bubble) {
     this_.sphereShader.uniforms({
       oldCenter: bubble.oldCenter,
       newCenter: bubble.center,
-      radius: bubble.radius
+      radius: bubble.radius,
     }).draw(this_.plane);
   });
   this.textureB.swapWith(this.textureA);
+
+  var center = bubble.center;
+  var radius = bubble.radius;
+  if (center.y > -0.9 * radius
+    || center.x - radius < -1.0
+    || center.z - radius < -1.0
+    || 1.0 - center.x < radius
+    || 1.0 - center.z < radius) {
+    return true;
+  }
+
+  return false;
 }
 
 Water.prototype.moveSphere = function(sphere) {

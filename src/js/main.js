@@ -239,7 +239,7 @@ window.onload = function() {
     bubbles.push (new Bubble(
       new GL.Vector(-1.0 + 2.0 * Math.random(), -0.9, -1.0 + 2.0 * Math.random()),
       0.05,
-      new GL.Vector(Math.random(), 0.0, Math.random())
+      new GL.Vector(0.0, 0.0, 0.0)
     ));
   }
 
@@ -262,11 +262,17 @@ window.onload = function() {
     water.moveSphere(sphere);
     sphere.updateCenter(sphere.center);
 
+    var aliveBubbles = []
     // Simulate bubble in water
     bubbles.forEach(function(bubble) {
-      water.moveSingleBubble(bubble);
+      var isAlive = !water.moveSingleBubble(bubble);
       bubble.updateCenter(bubble.center);
+
+      if (isAlive) {
+        aliveBubbles.push(bubble);
+      }
     });
+    bubbles = aliveBubbles;
 
     // Update the water simulation and graphics
     water.stepSimulation();

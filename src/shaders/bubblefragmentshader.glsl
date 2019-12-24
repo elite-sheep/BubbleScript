@@ -44,8 +44,7 @@ float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadi
 }
 
 vec3 getBubbleColor(vec3 point, int t) {
-  vec3 color = vec3(0.3, 0.3, 0.3);
-  //return color;
+  vec3 color = vec3(0.3);
 
   vec3 incomingRay = normalize(point - eye);
   vec3 normal = normalize(point - sphereCenter);
@@ -59,14 +58,14 @@ vec3 getBubbleColor(vec3 point, int t) {
   if (tt < 1e+6) {
     vec3 nextHit = point + tt * refractedRay;
     vec3 nextNormal = normalize(sphereCenter - nextHit);
-    vec3 nextRefractedRay = refract(refractedRay, -nextNormal, IOR_AIR / IOR_WATER);
-    refractedColor = getSurfaceRayColor(nextHit - 1e-4 * nextNormal, nextRefractedRay, underwaterColor, t + 1);
+    vec3 nextRefractedRay = refract(refractedRay, nextNormal, IOR_AIR / IOR_WATER);
+    refractedColor = dot(-nextNormal, nextRefractedRay) * getSurfaceRayColor(nextHit - 1e-4 * nextNormal, nextRefractedRay, underwaterColor, t + 1);
   }
 
   float fresnel = mix(0.5, 1.0, pow(1.0 - dot(normal, -incomingRay), 3.0));
 
-  color += dot(normal, reflectedColor) * reflectedColor;
-  color += dot(-normal, refractedRay) * refractedColor;
+  color += fresnel * dot(normal, reflectedColor) * reflectedColor;
+  color += (1.0 - fresnel) * dot(-normal, refractedRay) * refractedColor;
 
   return color;
 }
@@ -131,8 +130,8 @@ vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor, int t) {
 
 void main() {
   gl_FragColor = vec4(getBubbleColor(position, 0), 1.0);
-  //vec4 info = texture2D(water, position.xz * 0.5 + 0.5);
-  //if (position.y < info.r) {
-    //gl_FragColor.rgb *= underwaterColor * 1.2;
-  //}
+  vec4 info = texture2D(water, position.xz * 0.5 + 0.5);
+  if (position.y < info.r) {
+    gl_FragColor.rgb *= underwaterColor * 1.2;
+  }
 }
