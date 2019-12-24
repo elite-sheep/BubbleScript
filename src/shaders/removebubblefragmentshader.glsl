@@ -19,20 +19,11 @@ void main() {
   /* get vertex info */
   vec4 info = texture2D(texture, coord);
 
-  /* add the old volume */
-  info.r += volumeInSphere(oldCenter);
-  
-  /* subtract the new volume */
-  float volume = volumeInSphere(newCenter);
-  info.r -= volume;
+  float oldVolume = volumeInSphere(oldCenter);
+  info.r += oldVolume;
 
-  if (newCenter.y + radius > info.r
-      || newCenter.x - radius < -1.0
-      || newCenter.z - radius < -1.0
-      || 1.0 - newCenter.x < radius
-      || 1.0 - newCenter.z < radius) {
-    //info.r -= volume;
-  } 
+  float volume = volumeInSphere(newCenter);
+  info.r -= 0.1 * volume;
 
   gl_FragColor = info;
 }

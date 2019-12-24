@@ -14,6 +14,7 @@ uniform sampler2D water;
 
 uniform vec3 eye;
 varying vec3 position;
+varying vec3 actualPosition;
 uniform samplerCube sky;
 
 vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor, int t);
@@ -46,17 +47,17 @@ float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadi
 vec3 getBubbleColor(vec3 point, int t) {
   vec3 color = vec3(0.3);
 
-  vec3 incomingRay = normalize(point - eye);
-  vec3 normal = normalize(point - sphereCenter);
+  vec3 incomingRay = normalize(position - eye);
+  vec3 normal = normalize(actualPosition - sphereCenter);
 
   vec3 reflectedRay = reflect(incomingRay, normal);
-  vec3 reflectedColor = getSurfaceRayColor(point + 1e-4 * normal, reflectedRay, underwaterColor, t + 1);
+  vec3 reflectedColor = getSurfaceRayColor(position + 1e-4 * normal, reflectedRay, underwaterColor, t + 1);
 
   vec3 refractedColor = vec3(0.0, 0.0, 0.0);
   vec3 refractedRay = refract(incomingRay, normal, IOR_WATER / IOR_AIR);
-  float tt = intersectSphere(point, refractedRay, sphereCenter, sphereRadius);
+  float tt = intersectSphere(position, refractedRay, sphereCenter, sphereRadius);
   if (tt < 1e+6) {
-    vec3 nextHit = point + tt * refractedRay;
+    vec3 nextHit = position + tt * refractedRay;
     vec3 nextNormal = normalize(sphereCenter - nextHit);
     vec3 nextRefractedRay = refract(refractedRay, nextNormal, IOR_AIR / IOR_WATER);
     refractedColor = dot(-nextNormal, nextRefractedRay) * getSurfaceRayColor(nextHit - 1e-4 * nextNormal, nextRefractedRay, underwaterColor, t + 1);
@@ -129,9 +130,20 @@ vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor, int t) {
 }
 
 void main() {
-  gl_FragColor = vec4(getBubbleColor(position, 0), 1.0);
   vec4 info = texture2D(water, position.xz * 0.5 + 0.5);
   if (position.y < info.r) {
+    gl_FragColor = vec4(getBubbleColor(actualPosition, 0), 1.0);
     gl_FragColor.rgb *= underwaterColor * 1.2;
+  } else {
+    vec3 normal = vec3(info.b, sqrt(1.0 - dot(info.ba, info.ba)), info.a);
+    vec3 incomingRay = normalize(position - eye);
+    vec3 reflectedRay = reflect(incomingRay, normal);
+    vec3 refractedRay = refract(incomingRay, normal, IOR_AIR / IOR_WATER);
+    float fresnel = mix(0.25, 1.0, pow(1.0 - dot(normal, -incomingRay), 3.0));
+    
+    vec3 reflectedColor = getSurfaceRayColor(position, reflectedRay, abovewaterColor, 0);
+    vec3 refractedColor = getSurfaceRayColor(position, refractedRay, abovewaterColor, 0);
+    
+    gl_FragColor = vec4(mix(refractedColor, reflectedColor, fresnel), 1.0);
   }
 }
