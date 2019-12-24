@@ -48,6 +48,19 @@ Water.prototype.addDrop = function(x, y, radius, strength) {
   this.textureB.swapWith(this.textureA);
 };
 
+Water.prototype.moveSingleBubble = function(bubble) {
+  var this_ = this;
+  this.textureB.drawTo(function() {
+    this_.textureA.bind();
+    this_.sphereShader.uniforms({
+      oldCenter: bubble.oldCenter,
+      newCenter: bubble.center,
+      radius: bubble.radius
+    }).draw(this_.plane);
+  });
+  this.textureB.swapWith(this.textureA);
+}
+
 Water.prototype.moveSphere = function(sphere) {
   var this_ = this;
   this.textureB.drawTo(function() {

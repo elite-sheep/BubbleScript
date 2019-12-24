@@ -6,6 +6,7 @@
  * Released under the MIT license
  */
 
+import Bubble from "./bubble.js"
 import Cubemap from "./cubemap.js"
 import GL from "./lightgl.js"
 import Renderer from "./renderer.js"
@@ -41,6 +42,8 @@ var angleY = -200.5;
 var useSpherePhysics = false;
 var paused = false;
 var sphere;
+
+var bubbles;
 
 window.onload = function() {
   var ratio = window.devicePixelRatio || 1;
@@ -84,6 +87,8 @@ window.onload = function() {
     0.25,
     new GL.Vector(),
   );
+
+  bubbles = [];
 
   for (var i = 0; i < 20; i++) {
     water.addDrop(Math.random() * 2 - 1, Math.random() * 2 - 1, 0.03, (i & 1) ? 0.01 : -0.01);
@@ -225,9 +230,18 @@ window.onload = function() {
     if (e.which == ' '.charCodeAt(0)) paused = !paused;
     else if (e.which == 'G'.charCodeAt(0)) useSpherePhysics = !useSpherePhysics;
     else if (e.which == 'L'.charCodeAt(0) && paused) draw();
+    else if (e.which == 'B'.charCodeAt(0)) addBubble();
   };
 
   var frame = 0;
+
+  function addBubble() {
+    bubbles.push (new Bubble(
+      new GL.Vector(-1.0 + 2.0 * Math.random(), -0.9, -1.0 + 2.0 * Math.random()),
+      0.05,
+      new GL.Vector(Math.random(), 0.0, Math.random())
+    ));
+  }
 
   function update(seconds) {
     if (seconds > 1) return;
@@ -238,11 +252,21 @@ window.onload = function() {
       sphere.updateVelocity(new GL.Vector());
     } else if (useSpherePhysics) {
       sphere.simulate(seconds);
+
+      bubbles.forEach(function(bubble) {
+        bubble.simulate(seconds);
+      });
     }
 
     // Displace water around the sphere
     water.moveSphere(sphere);
     sphere.updateCenter(sphere.center);
+
+    // Simulate bubble in water
+    bubbles.forEach(function(bubble) {
+      water.moveSingleBubble(bubble);
+      bubble.updateCenter(bubble.center);
+    });
 
     // Update the water simulation and graphics
     water.stepSimulation();
@@ -265,6 +289,9 @@ window.onload = function() {
     gl.translate(0, 0.5, 0);
 
     gl.enable(gl.DEPTH_TEST);
+    bubbles.forEach(function(bubble) {
+      renderer.renderBubble(cubemap, bubble);
+    })
     renderer.renderCube(sphere);
     renderer.renderWater(water, cubemap, sphere);
     renderer.renderSphere(sphere);
