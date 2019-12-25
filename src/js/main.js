@@ -6,6 +6,7 @@
  * Released under the MIT license
  */
 
+import Bubble from "./bubble.js"
 import Cubemap from "./cubemap.js"
 import GL from "./lightgl.js"
 import Renderer from "./renderer.js"
@@ -41,6 +42,9 @@ var angleY = -200.5;
 var useSpherePhysics = false;
 var paused = false;
 var sphere;
+
+var bubbles;
+var timeStamp;
 
 window.onload = function() {
   var ratio = window.devicePixelRatio || 1;
@@ -84,6 +88,9 @@ window.onload = function() {
     0.25,
     new GL.Vector(),
   );
+
+  bubbles = [];
+  timeStamp = 0;
 
   for (var i = 0; i < 20; i++) {
     water.addDrop(Math.random() * 2 - 1, Math.random() * 2 - 1, 0.03, (i & 1) ? 0.01 : -0.01);
@@ -148,7 +155,7 @@ window.onload = function() {
         water.addDrop(pointOnPlane.x, pointOnPlane.z, 0.03, 0.01);
         if (paused) {
           water.updateNormals();
-          renderer.updateCaustics(water, sphere);
+          // renderer.updateCaustics(water, sphere);
         }
         break;
       }
@@ -164,7 +171,7 @@ window.onload = function() {
         sphere.center.y = Math.max(radius - 1, Math.min(10, sphere.center.y));
         sphere.center.z = Math.max(radius - 1, Math.min(1 - radius, sphere.center.z));
         prevHit = nextHit;
-        if (paused) renderer.updateCaustics(water, sphere);
+        // if (paused) renderer.updateCaustics(water, sphere);
         break;
       }
       case MODE_ORBIT_CAMERA: {
@@ -225,36 +232,67 @@ window.onload = function() {
     if (e.which == ' '.charCodeAt(0)) paused = !paused;
     else if (e.which == 'G'.charCodeAt(0)) useSpherePhysics = !useSpherePhysics;
     else if (e.which == 'L'.charCodeAt(0) && paused) draw();
+    else if (e.which == 'B'.charCodeAt(0)) addBubble();
   };
 
   var frame = 0;
 
+  function addBubble() {
+    bubbles.push (new Bubble(
+      new GL.Vector(-0.9 + 1.8 * Math.random(), -1.0, -0.9 + 1.8 * Math.random()),
+      0.1 * Math.random(),
+      new GL.Vector(0.0, 0.0, 0.0)
+    ));
+  }
+
   function update(seconds) {
     if (seconds > 1) return;
     frame += seconds * 2;
+
 
     if (mode == MODE_MOVE_SPHERE) {
       // Start from rest when the player releases the mouse after moving the sphere
       sphere.updateVelocity(new GL.Vector());
     } else if (useSpherePhysics) {
       sphere.simulate(seconds);
+
+      bubbles.forEach(function(bubble) {
+        bubble.simulate(seconds);
+      });
+
+      if (timeStamp == 0) {
+        //addBubble();
+      }
+      timeStamp = (timeStamp + 1) % 20;
     }
 
     // Displace water around the sphere
     water.moveSphere(sphere);
     sphere.updateCenter(sphere.center);
 
+    var aliveBubbles = []
+    // Simulate bubble in water
+    bubbles.forEach(function(bubble) {
+      var isAlive = !water.moveSingleBubble(bubble, sphere);
+      bubble.updateCenter(bubble.center);
+
+      if (isAlive) {
+        aliveBubbles.push(bubble);
+      }
+    });
+    bubbles = aliveBubbles;
+
     // Update the water simulation and graphics
     water.stepSimulation();
     water.updateNormals();
-    renderer.updateCaustics(water, sphere);
+    // renderer.updateCaustics(water, sphere);
   }
 
   function draw() {
     // Change the light direction to the camera look vector when the L key is pressed
     if (GL.keys.L) {
       renderer.lightDir = GL.Vector.fromAngles((90 - angleY) * Math.PI / 180, -angleX * Math.PI / 180);
-      if (paused) renderer.updateCaustics(water, sphere);
+      // if (paused) renderer.updateCaustics(water, sphere);
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -265,6 +303,9 @@ window.onload = function() {
     gl.translate(0, 0.5, 0);
 
     gl.enable(gl.DEPTH_TEST);
+    bubbles.forEach(function(bubble) {
+      renderer.renderBubble(cubemap, bubble);
+    })
     renderer.renderCube(sphere);
     renderer.renderWater(water, cubemap, sphere);
     renderer.renderSphere(sphere);

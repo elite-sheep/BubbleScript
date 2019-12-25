@@ -12,6 +12,13 @@ uniform sampler2D tiles;
 uniform sampler2D causticTex;
 uniform sampler2D water;
 
+uniform vec3 eye;
+varying vec3 position;
+varying vec3 actualPosition;
+uniform samplerCube sky;
+
+vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor, int t);
+
 vec2 intersectCube(vec3 origin, vec3 ray, vec3 cubeMin, vec3 cubeMax) {
   vec3 tMin = (cubeMin - origin) / ray;
   vec3 tMax = (cubeMax - origin) / ray;
@@ -37,25 +44,30 @@ float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadi
   return 1.0e6;
 }
 
-vec3 getSphereColor(vec3 point) {
-  vec3 color = vec3(0.5);
-  
-  /* ambient occlusion with walls */
-  color *= 1.0 - 0.9 / pow((1.0 + sphereRadius - abs(point.x)) / sphereRadius, 3.0);
-  color *= 1.0 - 0.9 / pow((1.0 + sphereRadius - abs(point.z)) / sphereRadius, 3.0);
-  color *= 1.0 - 0.9 / pow((point.y + 1.0 + sphereRadius) / sphereRadius, 3.0);
-  
-  /* caustics */
-  vec3 sphereNormal = (point - sphereCenter) / sphereRadius;
-  vec3 refractedLight = refract(-light, vec3(0.0, 1.0, 0.0), IOR_AIR / IOR_WATER);
-  float diffuse = max(0.0, dot(-refractedLight, sphereNormal)) * 0.5;
-  vec4 info = texture2D(water, point.xz * 0.5 + 0.5);
-  if (point.y < info.r) {
-    vec4 caustic = texture2D(causticTex, 0.75 * (point.xz - point.y * refractedLight.xz / refractedLight.y) * 0.5 + 0.5);
-    diffuse *= caustic.r * 4.0;
+vec3 getBubbleColor(vec3 point, int t) {
+  vec3 color = vec3(0.3);
+
+  vec3 incomingRay = normalize(position - eye);
+  vec3 normal = normalize(actualPosition - sphereCenter);
+
+  vec3 reflectedRay = reflect(incomingRay, normal);
+  vec3 reflectedColor = getSurfaceRayColor(position + 1e-4 * normal, reflectedRay, underwaterColor, t + 1);
+
+  vec3 refractedColor = vec3(0.0, 0.0, 0.0);
+  vec3 refractedRay = refract(incomingRay, normal, IOR_WATER / IOR_AIR);
+  float tt = intersectSphere(position, refractedRay, sphereCenter, sphereRadius);
+  if (tt < 1e+6) {
+    vec3 nextHit = position + tt * refractedRay;
+    vec3 nextNormal = normalize(sphereCenter - nextHit);
+    vec3 nextRefractedRay = refract(refractedRay, nextNormal, IOR_AIR / IOR_WATER);
+    refractedColor = dot(-nextNormal, nextRefractedRay) * getSurfaceRayColor(nextHit - 1e-4 * nextNormal, nextRefractedRay, underwaterColor, t + 1);
   }
-  color += diffuse;
-  
+
+  float fresnel = mix(0.5, 1.0, pow(1.0 - dot(normal, -incomingRay), 3.0));
+
+  color += fresnel * dot(normal, reflectedColor) * reflectedColor;
+  color += (1.0 - fresnel) * dot(-normal, refractedRay) * refractedColor;
+
   return color;
 }
 
@@ -96,17 +108,11 @@ vec3 getWallColor(vec3 point) {
   return wallColor * scale;
 }
 
-uniform vec3 eye;
-varying vec3 position;
-uniform samplerCube sky;
-uniform int isUnderWater;
 
-vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor) {
+vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor, int t) {
   vec3 color;
   float q = intersectSphere(origin, ray, sphereCenter, sphereRadius);
-  if (q < 1.0e6) {
-    color = getSphereColor(origin + ray * q);
-  } else if (ray.y < 0.0) {
+  if (ray.y < 0.0) {
     vec2 t = intersectCube(origin, ray, vec3(-1.0, -poolHeight, -1.0), vec3(1.0, 2.0, 1.0));
     color = getWallColor(origin + ray * t.y);
   } else {
@@ -124,35 +130,19 @@ vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor) {
 }
 
 void main() {
-  vec2 coord = position.xz * 0.5 + 0.5;
-  vec4 info = texture2D(water, coord);
-  
-  /* make water look more "peaked" */
-  for (int i = 0; i < 5; i++) {
-    coord += info.ba * 0.005;
-    info = texture2D(water, coord);
-  }
-  
-  vec3 normal = vec3(info.b, sqrt(1.0 - dot(info.ba, info.ba)), info.a);
-  vec3 incomingRay = normalize(position - eye);
-  
-  if (isUnderWater > 0) {
-    normal = -normal;
-    vec3 reflectedRay = reflect(incomingRay, normal);
-    vec3 refractedRay = refract(incomingRay, normal, IOR_WATER / IOR_AIR);
-    float fresnel = mix(0.5, 1.0, pow(1.0 - dot(normal, -incomingRay), 3.0));
-    
-    vec3 reflectedColor = getSurfaceRayColor(position, reflectedRay, underwaterColor);
-    vec3 refractedColor = getSurfaceRayColor(position, refractedRay, vec3(1.0)) * vec3(0.8, 1.0, 1.1);
-    
-    gl_FragColor = vec4(mix(reflectedColor, refractedColor, (1.0 - fresnel) * length(refractedRay)), 1.0);
+  vec4 info = texture2D(water, position.xz * 0.5 + 0.5);
+  if (position.y < info.r) {
+    gl_FragColor = vec4(getBubbleColor(actualPosition, 0), 1.0);
+    gl_FragColor.rgb *= underwaterColor * 1.2;
   } else {
+    vec3 normal = vec3(info.b, sqrt(1.0 - dot(info.ba, info.ba)), info.a);
+    vec3 incomingRay = normalize(position - eye);
     vec3 reflectedRay = reflect(incomingRay, normal);
     vec3 refractedRay = refract(incomingRay, normal, IOR_AIR / IOR_WATER);
     float fresnel = mix(0.25, 1.0, pow(1.0 - dot(normal, -incomingRay), 3.0));
     
-    vec3 reflectedColor = getSurfaceRayColor(position, reflectedRay, abovewaterColor);
-    vec3 refractedColor = getSurfaceRayColor(position, refractedRay, abovewaterColor);
+    vec3 reflectedColor = getSurfaceRayColor(position, reflectedRay, abovewaterColor, 0);
+    vec3 refractedColor = getSurfaceRayColor(position, refractedRay, abovewaterColor, 0);
     
     gl_FragColor = vec4(mix(refractedColor, reflectedColor, fresnel), 1.0);
   }

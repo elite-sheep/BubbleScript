@@ -10,6 +10,8 @@ import GL from "./lightgl.js"
 import { gl } from "./main.js"
 import { water } from "./main.js"
 
+import bubbleVertexShader from "../shaders/bubblevertexshader.glsl"
+import bubbleFragmentShader from "../shaders/bubblefragmentshader.glsl"
 import causticsVertexShader from "../shaders/causticsvertexshader.glsl"
 import causticsFragmentShader from "../shaders/causticsfragmentshader.glsl"
 import cubeVertexShader from "../shaders/cubevertexshader.glsl"
@@ -33,6 +35,9 @@ function Renderer() {
   }
   this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
   this.sphereShader = new GL.Shader(sphereVertexShader, sphereFragmentShader);
+
+  this.bubbleMesh = GL.Mesh.sphere({detail : 10});
+  this.bubbleShader = new GL.Shader(bubbleVertexShader, bubbleFragmentShader);
 
   this.cubeMesh = GL.Mesh.cube();
   this.cubeMesh.triangles.splice(4, 2);
@@ -83,6 +88,25 @@ Renderer.prototype.renderWater = function(water, sky, sphere) {
     }).draw(this.waterMesh);
   }
   gl.disable(gl.CULL_FACE);
+};
+
+Renderer.prototype.renderBubble = function(sky, bubble) {
+  var tracer = new GL.Raytracer();
+  water.textureA.bind(0);
+  this.tileTexture.bind(1);
+  sky.bind(2);
+  this.causticTex.bind(3);
+  gl.enable(gl.CULL_FACE);
+  this.bubbleShader.uniforms({
+    light: this.lightDir,
+    water: 0,
+    tiles: 1,
+    sky: 2,
+    causticTex: 3,
+    eye: tracer.eye,
+    sphereCenter: bubble.center,
+    sphereRadius: bubble.radius
+  }).draw(this.sphereMesh);
 };
 
 Renderer.prototype.renderSphere = function(sphere) {

@@ -11,7 +11,9 @@ import { gl } from "./main.js"
 
 import dropFragmentShader from "../shaders/dropfragmentshader.glsl"
 import normalFragmentShader from "../shaders/normalfragmentshader.glsl"
+import moveBubbleFragmentShader from "../shaders/movebubblefragmentshader.glsl"
 import moveSphereFragmentShader from "../shaders/movespherefragmentshader.glsl"
+import removeBubbleFragmentShader from "../shaders/removebubblefragmentshader.glsl"
 import updateFragmentShader from "../shaders/updatefragmentshader.glsl"
 import vertexShader from "../shaders/basevertexshader.glsl"
 
@@ -33,6 +35,8 @@ function Water() {
   this.updateShader = new GL.Shader(vertexShader, updateFragmentShader);
   this.normalShader = new GL.Shader(vertexShader, normalFragmentShader);
   this.sphereShader = new GL.Shader(vertexShader, moveSphereFragmentShader);
+  this.bubbleShader = new GL.Shader(vertexShader, moveBubbleFragmentShader);
+  this.removeBubbleShader = new GL.Shader(vertexShader, removeBubbleFragmentShader);
 }
 
 Water.prototype.addDrop = function(x, y, radius, strength) {
@@ -47,6 +51,46 @@ Water.prototype.addDrop = function(x, y, radius, strength) {
   });
   this.textureB.swapWith(this.textureA);
 };
+
+Water.prototype.removeBubble = function(bubble) {
+  var this_ = this;
+  this.textureB.drawTo(function() {
+    this_.textureA.bind();
+    this_.removeBubbleShader.uniforms({
+      oldCenter: bubble.oldCenter,
+      newCenter: bubble.center,
+      radius: bubble.radius,
+    }).draw(this_.plane);
+  });
+  this.textureB.swapWith(this.textureA);
+}
+
+Water.prototype.moveSingleBubble = function(bubble, sphere) {
+  var this_ = this;
+  this.textureB.drawTo(function() {
+    this_.textureA.bind();
+    this_.bubbleShader.uniforms({
+      oldCenter: bubble.oldCenter,
+      newCenter: bubble.center,
+      radius: bubble.radius,
+    }).draw(this_.plane);
+  });
+  this.textureB.swapWith(this.textureA);
+
+  var center = bubble.center;
+  var radius = bubble.radius;
+  if ( center.subtract(sphere.center).length < radius + sphere.radius
+    || center.y + radius > 0.01 * radius
+    || center.x - radius < -1.0
+    || center.z - radius < -1.0
+    || 1.0 - center.x < radius
+    || 1.0 - center.z < radius) {
+    this.removeBubble(bubble);
+    return true;
+  }
+
+  return false;
+}
 
 Water.prototype.moveSphere = function(sphere) {
   var this_ = this;

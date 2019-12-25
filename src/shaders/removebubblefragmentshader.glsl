@@ -5,6 +5,7 @@ uniform vec3 oldCenter;
 uniform vec3 newCenter;
 uniform float radius;
 varying vec2 coord;
+varying vec3 position;
 
 float volumeInSphere(vec3 center) {
   vec3 toCenter = vec3(coord.x * 2.0 - 1.0, 0.0, coord.y * 2.0 - 1.0) - center;
@@ -15,15 +16,29 @@ float volumeInSphere(vec3 center) {
   return (ymax - ymin) * 0.1;
 }
 
+// Fluid reconstraction kernel function.
+float W(float h, float d) {
+  if (d > h)
+    return 0.8 * h;
+  else {
+    return (315.0 * pow(h-d, 3.0)) / (64.0 * 3.1415926 * pow(h, 4.0));
+  }
+}
+
 void main() {
   /* get vertex info */
   vec4 info = texture2D(texture, coord);
 
-  /* add the old volume */
-  info.r += volumeInSphere(oldCenter);
-  
-  /* subtract the new volume */
-  info.r -= volumeInSphere(newCenter);
+  float oldVolume = volumeInSphere(oldCenter);
+  info.r += oldVolume;
+
+  float newVolume = volumeInSphere(newCenter);
+  if (newVolume > 0.0) { 
+    // Fluid surface reconstruction
+    float h = 2.0 * radius * (2.0 + info.r - newCenter.y);
+    float dis = pow(length(newCenter - position), 2.0);
+    info.r += 0.005 * (W(h, dis) - W(h/2.0, dis));
+   }
 
   gl_FragColor = info;
 }
