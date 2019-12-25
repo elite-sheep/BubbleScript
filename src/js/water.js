@@ -65,7 +65,7 @@ Water.prototype.removeBubble = function(bubble) {
   this.textureB.swapWith(this.textureA);
 }
 
-Water.prototype.moveSingleBubble = function(bubble) {
+Water.prototype.moveSingleBubble = function(bubble, sphere) {
   var this_ = this;
   this.textureB.drawTo(function() {
     this_.textureA.bind();
@@ -79,7 +79,8 @@ Water.prototype.moveSingleBubble = function(bubble) {
 
   var center = bubble.center;
   var radius = bubble.radius;
-  if (center.y + radius > 0.01 * radius
+  if ( center.subtract(sphere.center).length < radius + sphere.radius
+    || center.y + radius > 0.01 * radius
     || center.x - radius < -1.0
     || center.z - radius < -1.0
     || 1.0 - center.x < radius

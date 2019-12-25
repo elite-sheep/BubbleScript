@@ -273,7 +273,7 @@ window.onload = function() {
     var aliveBubbles = []
     // Simulate bubble in water
     bubbles.forEach(function(bubble) {
-      var isAlive = !water.moveSingleBubble(bubble);
+      var isAlive = !water.moveSingleBubble(bubble, sphere);
       bubble.updateCenter(bubble.center);
 
       if (isAlive) {
