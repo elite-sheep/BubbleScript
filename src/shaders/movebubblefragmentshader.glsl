@@ -31,7 +31,7 @@ void main() {
     if (position.y <= height) {
       info.r -= volume;
     } else {
-      info.r += 0.1 * radius;
+      info.r += 0.01 * radius;
     }
   }
 
