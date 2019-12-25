@@ -5,6 +5,7 @@ uniform vec3 oldCenter;
 uniform vec3 newCenter;
 uniform float radius;
 varying vec2 coord;
+varying vec3 position;
 
 float volumeInSphere(vec3 center) {
   vec3 toCenter = vec3(coord.x * 2.0 - 1.0, 0.0, coord.y * 2.0 - 1.0) - center;
@@ -24,15 +25,15 @@ void main() {
   
   /* subtract the new volume */
   float volume = volumeInSphere(newCenter);
-  info.r -= volume;
 
-  if (newCenter.y + radius > info.r
-      || newCenter.x - radius < -1.0
-      || newCenter.z - radius < -1.0
-      || 1.0 - newCenter.x < radius
-      || 1.0 - newCenter.z < radius) {
-    //info.r -= volume;
-  } 
+  if (volume > 0.0) {
+    float height = info.r;
+    if (position.y <= height) {
+      info.r -= volume;
+    } else {
+      info.r += 0.1 * radius;
+    }
+  }
 
   gl_FragColor = info;
 }

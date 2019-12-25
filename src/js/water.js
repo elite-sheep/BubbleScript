@@ -79,7 +79,7 @@ Water.prototype.moveSingleBubble = function(bubble) {
 
   var center = bubble.center;
   var radius = bubble.radius;
-  if (center.y > -0.95 * radius
+  if (center.y + radius > 0.01 * radius
     || center.x - radius < -1.0
     || center.z - radius < -1.0
     || 1.0 - center.x < radius
