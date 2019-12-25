@@ -32,6 +32,8 @@ Bubble.prototype.simulate = function(_delta) {
     this.velocity.subtract(this.velocity.unit().multiply(percentUnderWater * _delta * this.velocity.dot(this.velocity)));
   this.center = this.center.add(this.velocity.multiply(_delta));
 
+  this.radius = (1.0 + 0.005 * _delta) * this.radius;
+
   // Bounce off the bottom
   if (this.center.y < this.radius - 1) {
     this.center.y = this.radius - 1;
