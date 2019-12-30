@@ -67,7 +67,7 @@ window.onload = function() {
     // Store the first display we find. A more production-ready version should
     // allow the user to choose from their available displays.
     vrDisplay = displays[0];
-    console.log(vrDisplay);
+    //console.log(vrDisplay);
 
     vrDisplay.requestPresent([{ source: gl.canvas}]).then( function () {
 
@@ -108,9 +108,11 @@ function drawVR() {
 
   function onresize() {
     vrDisplay.getFrameData(frameData);
-    console.log('frameData');
-		console.log(frameData);
+    //console.log('frameData');
+		//console.log(frameData);
+		console.log('onresize');
     const animating = () => {
+			console.log('animating');
 			var nextTime = new Date().getTime();
 		  if (!paused) {
 		    update((nextTime - prevTime) / 1000);
@@ -127,20 +129,14 @@ function drawVR() {
 		  var height = innerHeight;
 
 
-			let modelMatrix = new GL.Matrix(), 
-					vpMatrix = GL.Matrix(),
-					mvpMatrix = GL.Matrix();
-			
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
 
 			/*left*/
 			var leftpjm = Matrixrize(leftProjectionMatrix);
-		  console.log('LPM');
-			console.log(leftProjectionMatrix);
 		
 			var leftvwm = Matrixrize(leftViewMatrix);
-		  //console.log(leftvwm);
 
 		  gl.canvas.width = width * ratio;
 		  gl.canvas.height = height * ratio;
@@ -148,9 +144,9 @@ function drawVR() {
 		  gl.canvas.style.height = height + 'px';
 
 
-			console.log('-2');
-			console.log(gl['projectionMatrix'].m);
-			console.log(gl['modelviewMatrix'].m);
+			//console.log('-2');
+			//console.log(gl['projectionMatrix'].m);
+			//console.log(gl['modelviewMatrix'].m);
 		 
 			gl.viewport(0, 0, gl.canvas.width*0.5, gl.canvas.height);
 			gl.loadIdentity();
@@ -165,33 +161,27 @@ function drawVR() {
 
       /********************************* Projection Mode *****************************************/
 			gl.matrixMode(gl.PROJECTION);
-			/*
-			vpMatrix =  leftpjm.multiply(leftvwm);
-			mvpMatrix = vpMatrix.multiply(modelMatrix);
-			*/
-			console.log('-1');
-			console.log(gl['projectionMatrix'].m);
-			console.log(gl['modelviewMatrix'].m);
+			
+			//console.log('-1');
+			//console.log(gl['projectionMatrix'].m);
+			//console.log(gl['modelviewMatrix'].m);
+			
 			gl.loadIdentity();
-			//gl.loadMatrix(mvpMatrix);
 
-			console.log('0');
-			console.log(gl['projectionMatrix'].m);
-			console.log(gl['modelviewMatrix'].m);
+			//console.log('0');
+			//console.log(gl['projectionMatrix'].m);
+			//console.log(gl['modelviewMatrix'].m);
 
 			//gl.perspective(45, gl.canvas.width*0.5 / gl.canvas.height, 0.01, 100);
 			
-			console.log('1');
-			console.log(gl['projectionMatrix'].m);
-			console.log(gl['modelviewMatrix'].m);
+			//console.log('1');
+			//console.log(gl['projectionMatrix'].m);
+			//console.log(gl['modelviewMatrix'].m);
 			
-			//gl.projectionMatrix = gl.projectionMatrix.multiply(leftpjm);
 			gl.multMatrix(leftpjm);
-			//console.log('leftpjm');
-			//console.log(leftpjm.m);
 
-			console.log('2');
-			console.log(gl.projectionMatrix.m);
+			//console.log('2');
+			//console.log(gl.projectionMatrix.m);
 			/********************************************************************************************/	
 
 		  gl.matrixMode(gl.MODELVIEW);
@@ -206,7 +196,6 @@ function drawVR() {
 			var rightvwm = Matrixrize(rightViewMatrix);
 		  //console.log(rightvwm)
 
-			//gl.loadIdentity();
 		  gl.viewport(gl.canvas.width*0.5, 0, gl.canvas.width*0.5, gl.canvas.height);
 			gl.loadIdentity();
     	gl.translate(0, 0, -4);
@@ -220,7 +209,7 @@ function drawVR() {
 			gl.multMatrix(rightpjm);
 		  gl.matrixMode(gl.MODELVIEW);
 		  draw(false);
-			
+			vrDisplay.getFrameData(frameData);
 			vrDisplay.submitFrame();	
 			}
 			animating();
@@ -455,7 +444,7 @@ function drawVR() {
       // if (paused) renderer.updateCaustics(water, sphere);
     }
 		if (clear){
-			console.log('gl.clear')
+			//console.log('gl.clear')
     	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		}
 		/*
