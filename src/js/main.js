@@ -45,24 +45,185 @@ var sphere;
 
 var bubbles;
 var timeStamp;
+var vrDisplay;
+var frameData = new VRFrameData()
+
+
+console.log('out of function')
 
 window.onload = function() {
+
+  navigator.getVRDisplays().then(displays => {
+    // Filter down to devices that can present.
+    displays = displays.filter(display => display.capabilities.canPresent);
+
+    // If there are no devices available, quit out.
+    if (displays.length === 0) {
+      console.warn('No devices available able to present.');
+      return;
+    }
+    
+    
+    // Store the first display we find. A more production-ready version should
+    // allow the user to choose from their available displays.
+    vrDisplay = displays[0];
+    console.log(vrDisplay);
+
+    vrDisplay.requestPresent([{ source: gl.canvas}]).then( function () {
+
+    	console.log('request Present done.');
+			drawVR();
+
+
+
+
+
+		});
+  });
+
+
+};
+
+ function animate() {
+    var nextTime = new Date().getTime();
+    if (!paused) {
+      update((nextTime - prevTime) / 1000);
+      draw();
+    }
+    prevTime = nextTime;
+    requestAnimationFrame(animate);
+  }
+
+
+var vrSceneFrame;
+function drawVR() {
+	console.log('draw VR!')
   var ratio = window.devicePixelRatio || 1;
   var help = document.getElementById('help');
 
+  function Matrixrize(lm){
+		return  new GL.Matrix([lm[0], lm[1], lm[2], lm[3], lm[4], lm[5], lm[6], lm[7], lm[8], lm[9], lm[10], lm[11], lm[12], lm[13], lm[14], lm[15]]).transpose();
+	};
+	
+
   function onresize() {
-    var width = innerWidth - help.clientWidth - 20;
-    var height = innerHeight;
-    gl.canvas.width = width * ratio;
-    gl.canvas.height = height * ratio;
-    gl.canvas.style.width = width + 'px';
-    gl.canvas.style.height = height + 'px';
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.matrixMode(gl.PROJECTION);
-    gl.loadIdentity();
-    gl.perspective(45, gl.canvas.width / gl.canvas.height, 0.01, 100);
-    gl.matrixMode(gl.MODELVIEW);
-    draw();
+    vrDisplay.getFrameData(frameData);
+    console.log('frameData');
+		console.log(frameData);
+    const animating = () => {
+			var nextTime = new Date().getTime();
+		  if (!paused) {
+		    update((nextTime - prevTime) / 1000);
+		    draw();
+		  }
+		  prevTime = nextTime;
+      vrSceneFrame = vrDisplay.requestAnimationFrame(animating);
+      const leftProjectionMatrix = frameData.leftProjectionMatrix;
+      const leftViewMatrix = frameData.leftViewMatrix;
+      const rightProjectionMatrix = frameData.rightProjectionMatrix;
+      const rightViewMatrix = frameData.rightViewMatrix;
+		
+			var width = innerWidth - help.clientWidth - 20;
+		  var height = innerHeight;
+
+
+			let modelMatrix = new GL.Matrix(), 
+					vpMatrix = GL.Matrix(),
+					mvpMatrix = GL.Matrix();
+			
+
+
+
+			/*left*/
+			var leftpjm = Matrixrize(leftProjectionMatrix);
+		  console.log('LPM');
+			console.log(leftProjectionMatrix);
+		
+			var leftvwm = Matrixrize(leftViewMatrix);
+		  //console.log(leftvwm);
+
+		  gl.canvas.width = width * ratio;
+		  gl.canvas.height = height * ratio;
+		  gl.canvas.style.width = width + 'px';
+		  gl.canvas.style.height = height + 'px';
+
+
+			console.log('-2');
+			console.log(gl['projectionMatrix'].m);
+			console.log(gl['modelviewMatrix'].m);
+		 
+			gl.viewport(0, 0, gl.canvas.width*0.5, gl.canvas.height);
+			gl.loadIdentity();
+
+    	gl.translate(0, 0, -4);
+    	gl.rotate(-angleX, 1, 0, 0);
+    	gl.rotate(-angleY, 0, 1, 0);
+    	gl.translate(0, 0.5, 0);
+		
+			gl.multMatrix(leftvwm);
+
+
+      /********************************* Projection Mode *****************************************/
+			gl.matrixMode(gl.PROJECTION);
+			/*
+			vpMatrix =  leftpjm.multiply(leftvwm);
+			mvpMatrix = vpMatrix.multiply(modelMatrix);
+			*/
+			console.log('-1');
+			console.log(gl['projectionMatrix'].m);
+			console.log(gl['modelviewMatrix'].m);
+			gl.loadIdentity();
+			//gl.loadMatrix(mvpMatrix);
+
+			console.log('0');
+			console.log(gl['projectionMatrix'].m);
+			console.log(gl['modelviewMatrix'].m);
+
+			//gl.perspective(45, gl.canvas.width*0.5 / gl.canvas.height, 0.01, 100);
+			
+			console.log('1');
+			console.log(gl['projectionMatrix'].m);
+			console.log(gl['modelviewMatrix'].m);
+			
+			//gl.projectionMatrix = gl.projectionMatrix.multiply(leftpjm);
+			gl.multMatrix(leftpjm);
+			//console.log('leftpjm');
+			//console.log(leftpjm.m);
+
+			console.log('2');
+			console.log(gl.projectionMatrix.m);
+			/********************************************************************************************/	
+
+		  gl.matrixMode(gl.MODELVIEW);
+
+		  draw(true);
+
+			/*right*/
+				
+			var rightpjm = Matrixrize(rightProjectionMatrix);
+		  //console.log(rightpjm)
+		
+			var rightvwm = Matrixrize(rightViewMatrix);
+		  //console.log(rightvwm)
+
+			//gl.loadIdentity();
+		  gl.viewport(gl.canvas.width*0.5, 0, gl.canvas.width*0.5, gl.canvas.height);
+			gl.loadIdentity();
+    	gl.translate(0, 0, -4);
+    	gl.rotate(-angleX, 1, 0, 0);
+    	gl.rotate(-angleY, 0, 1, 0);
+    	gl.translate(0, 0.5, 0);
+			gl.multMatrix(rightvwm);
+		  gl.matrixMode(gl.PROJECTION); 
+			gl.loadIdentity();
+		  //gl.perspective(45, gl.canvas.width*0.5 / gl.canvas.height, 0.01, 100);
+			gl.multMatrix(rightpjm);
+		  gl.matrixMode(gl.MODELVIEW);
+		  draw(false);
+			
+			vrDisplay.submitFrame();	
+			}
+			animating();
   }
 
   document.body.appendChild(gl.canvas);
@@ -105,6 +266,7 @@ window.onload = function() {
     function(callback) { setTimeout(callback, 0); };
 
   var prevTime = new Date().getTime();
+  /*
   function animate() {
     var nextTime = new Date().getTime();
     if (!paused) {
@@ -113,9 +275,7 @@ window.onload = function() {
     }
     prevTime = nextTime;
     requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
-
+  }*/
   window.onresize = onresize;
 
   var prevHit;
@@ -288,20 +448,23 @@ window.onload = function() {
     // renderer.updateCaustics(water, sphere);
   }
 
-  function draw() {
+  function draw(clear=false) {
     // Change the light direction to the camera look vector when the L key is pressed
     if (GL.keys.L) {
       renderer.lightDir = GL.Vector.fromAngles((90 - angleY) * Math.PI / 180, -angleX * Math.PI / 180);
       // if (paused) renderer.updateCaustics(water, sphere);
     }
-
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.loadIdentity();
+		if (clear){
+			console.log('gl.clear')
+    	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		}
+		/*
+		gl.loadIdentity();
     gl.translate(0, 0, -4);
     gl.rotate(-angleX, 1, 0, 0);
     gl.rotate(-angleY, 0, 1, 0);
     gl.translate(0, 0.5, 0);
-
+		*/
     gl.enable(gl.DEPTH_TEST);
     bubbles.forEach(function(bubble) {
       renderer.renderBubble(cubemap, bubble);
@@ -311,4 +474,7 @@ window.onload = function() {
     renderer.renderSphere(sphere);
     gl.disable(gl.DEPTH_TEST);
   }
+
+
+
 };
